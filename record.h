@@ -20,7 +20,7 @@ struct openat_params {
 
 struct read_params {
     int fd;
-    void *buf;
+//    void *buf;
     size_t count;
 };
 
@@ -30,7 +30,7 @@ struct close_params {
 
 struct pread64_params {
     int fd;
-    void *buf;
+//    void *buf;
     size_t count;
     off_t offset;
 };
