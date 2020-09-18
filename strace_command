@@ -1,1 +1,1 @@
-strace -r -o trace1 --trace=openat,read,close,pread64 --verbose=none --const-print-style=raw ls
+strace -r -o trace1 --trace=openat,read,write,close,pread64,pwrite64 --verbose=none --const-print-style=raw ls > /dev/null
