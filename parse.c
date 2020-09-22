@@ -31,7 +31,7 @@ void new_openat(char *line, int offset, struct record *e) {
 void new_read(char *line, int offset, struct record *e) {
     line += offset;
 
-    int field1=-1, field3=-1; //field2 is the returned contents of read
+    int field1 = -1, field3 = -1; //field2 is the returned contents of read
     sscanf(line, "%i, %*[^,], %i", &field1, &field3);   //discards field2
 
     struct read_params *params = malloc(sizeof(struct read_params));
@@ -44,7 +44,7 @@ void new_read(char *line, int offset, struct record *e) {
 void new_write(char *line, int offset, struct record *e) {
     line += offset;
 
-    int field1=-1, field3=-1; //field2 is the returned contents of read
+    int field1 = -1, field3 = -1; //field2 is the returned contents of read
     sscanf(line, "%i, %*[^,], %i", &field1, &field3);   //discards field2
 
     struct write_params *params = malloc(sizeof(struct write_params));
@@ -153,14 +153,21 @@ void dispatch(struct record entry) {
     }
 }
 
-void replay(struct record *records, int size) {
+void __attribute__((optimize("O0"))) replay(struct record *records, int size) { //prevents the loop from being optimized out
     for (int i = 0; i < size; i++) {
-        double delta = records[i].time_delta * 1000 * 1000;   //milliseconds to nanoseconds
-        struct timespec length = {
-                .tv_sec = 0,
-                .tv_nsec = delta
-        };
-        nanosleep(&length, NULL);
+        double delta = records[i].time_delta; //seconds
+        struct timespec ts1, ts2;
+        clock_gettime(CLOCK_MONOTONIC, &ts1);
+        clock_gettime(CLOCK_MONOTONIC, &ts2);
+        double duration = ts2.tv_sec + 1e-9 * ts2.tv_nsec
+                          - (ts1.tv_sec + 1e-9 * ts1.tv_nsec);
+        while (delta - duration > 20*1e-6) {    //less than 20 microseconds will be spinned. clock_gettime has an intrinsic latency of at least 20us
+            clock_gettime(CLOCK_MONOTONIC, &ts2);
+            duration = ts2.tv_sec + 1e-9 * ts2.tv_nsec
+                       - (ts1.tv_sec + 1e-9 * ts1.tv_nsec);
+        }
+        long numSpin = (long)((delta-duration) * 140000000.0);  //empirical value
+        for(long j=0;j<numSpin;j++);
 
         dispatch(records[i]);
     }
