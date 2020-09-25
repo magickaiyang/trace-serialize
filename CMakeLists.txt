@@ -4,3 +4,4 @@ project(trace C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(parse parse.c)
+add_executable(parse_lucy parse_lucy.c)
